@@ -1,14 +1,3 @@
-
-
-"""
-Course:  Training YOLO v3 for Objects Detection with Custom Data
-
-Section-2
-Objects Detection on Video with YOLO v3 and OpenCV
-File: yolo-3-video.py
-"""
-
-
 # Detecting Objects on Video with OpenCV deep learning library
 #
 # Algorithm:
@@ -70,54 +59,38 @@ with open('YOLO-COCO-DATA/coco.names') as f:
     # and putting them into the list
     labels = [line.strip() for line in f]
 
+print('List with labels names:')
+print(labels)
 
-# # Check point
-# print('List with labels names:')
-# print(labels)
-
-# Loading trained YOLO v3 Objects Detector
-# with the help of 'dnn' library from OpenCV
-# Pay attention! If you're using Windows, yours paths might look like:
-# r'yolo-coco-data\yolov3.cfg'
-# r'yolo-coco-data\yolov3.weights'
-# or:
-# 'yolo-coco-data\\yolov3.cfg'
-# 'yolo-coco-data\\yolov3.weights'
 network = cv2.dnn.readNetFromDarknet('YOLO-COCO-DATA/yolov3.cfg',
                                      'YOLO-COCO-DATA/yolov3.weights')
 
 # Getting list with names of all layers from YOLO v3 network
 layers_names_all = network.getLayerNames()
 
-# # Check point
-# print()
-# print(layers_names_all)
+print()
+print(layers_names_all)
 
 # Getting only output layers' names that we need from YOLO v3 algorithm
 # with function that returns indexes of layers with unconnected outputs
-layers_names_output = \
-    [layers_names_all[i[0] - 1] for i in network.getUnconnectedOutLayers()]
+layers_names_output = [layers_names_all[i[0] - 1] for i in network.getUnconnectedOutLayers()]
 
-# # Check point
-# print()
-# print(layers_names_output)  # ['yolo_82', 'yolo_94', 'yolo_106']
+print()
+print(layers_names_output)  # ['yolo_82', 'yolo_94', 'yolo_106']
 
 # Setting minimum probability to eliminate weak predictions
 probability_minimum = 0.5
 
-# Setting threshold for filtering weak bounding boxes
-# with non-maximum suppression
+# Setting threshold for filtering weak bounding boxes with non-maximum suppression
 threshold = 0.3
 
-# Generating colours for representing every detected object
-# with function randint(low, high=None, size=None, dtype='l')
+# Generating colours for representing every detected object with function randint(low, high=None, size=None, dtype='l')
 colours = np.random.randint(0, 255, size=(len(labels), 3), dtype='uint8')
 
-# # Check point
-# print()
-# print(type(colours))  # <class 'numpy.ndarray'>
-# print(colours.shape)  # (80, 3)
-# print(colours[0])  # [172  10 127]
+print()
+print(type(colours))
+print(colours.shape)
+print(colours[0])
 
 """
 End of:
@@ -161,12 +134,6 @@ while True:
     Getting blob from current frame
     """
 
-    # Getting blob from current frame
-    # The 'cv2.dnn.blobFromImage' function returns 4-dimensional blob from current
-    # frame after mean subtraction, normalizing, and RB channels swapping
-    # Resulted shape has number of frames, number of channels, width and height
-    # E.G.:
-    # blob = cv2.dnn.blobFromImage(image, scalefactor=1.0, size, mean, swapRB=True)
     blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416),
                                  swapRB=True, crop=False)
 
@@ -221,21 +188,12 @@ while True:
             # Getting value of probability for defined class
             confidence_current = scores[class_current]
 
-            # # Check point
-            # # Every 'detected_objects' numpy array has first 4 numbers with
-            # # bounding box coordinates and rest 80 with probabilities
-            #  # for every class
-            # print(detected_objects.shape)  # (85,)
+            print(detected_objects.shape)  # (85,)
 
             # Eliminating weak predictions with minimum probability
             if confidence_current > probability_minimum:
-                # Scaling bounding box coordinates to the initial frame size
-                # YOLO data format keeps coordinates for center of bounding box
-                # and its current width and height
-                # That is why we can just multiply them elementwise
-                # to the width and height
-                # of the original frame and in this way get coordinates for center
-                # of bounding box, its width and height for original frame
+                
+                # Scaling detections output to shape of image 
                 box_current = detected_objects[0:4] * np.array([w, h, w, h])
 
                 # Now, from YOLO data format, we can get top left corner coordinates
@@ -260,14 +218,6 @@ while True:
     Non-maximum suppression
     """
 
-    # Implementing non-maximum suppression of given bounding boxes
-    # With this technique we exclude some of bounding boxes if their
-    # corresponding confidences are low or there is another
-    # bounding box for this region with higher confidence
-
-    # It is needed to make sure that data type of the boxes is 'int'
-    # and data type of the confidences is 'float'
-    # https://github.com/opencv/opencv/issues/12789
     results = cv2.dnn.NMSBoxes(bounding_boxes, confidences,
                                probability_minimum, threshold)
 
@@ -281,8 +231,7 @@ while True:
     Drawing bounding boxes and labels
     """
 
-    # Checking if there is at least one detected object
-    # after non-maximum suppression
+    # Checking if there is at least one detected object after non-maximum suppression
     if len(results) > 0:
         # Going through indexes of results
         for i in results.flatten():
@@ -295,9 +244,8 @@ while True:
             # and converting from numpy array to list
             colour_box_current = colours[class_numbers[i]].tolist()
 
-            # # # Check point
-            # print(type(colour_box_current))  # <class 'list'>
-            # print(colour_box_current)  # [172 , 10, 127]
+            print(type(colour_box_current))  
+            print(colour_box_current) 
 
             # Drawing bounding box on the original current frame
             cv2.rectangle(frame, (x_min, y_min),
@@ -319,22 +267,14 @@ while True:
 
     """
     Start of:
-    Writing processed frame into the file
+    Writing processed frames into the file
     """
 
-    # Initializing writer
-    # we do it only once from the very beginning
-    # when we get spatial dimensions of the frames
     if writer is None:
         # Constructing code of the codec
         # to be used in the function VideoWriter
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
-        # Writing current processed frame into the video file
-        # Pay attention! If you're using Windows, yours path might looks like:
-        # r'videos\result-traffic-cars.mp4'
-        # or:
-        # 'videos\\result-traffic-cars.mp4'
         writer = cv2.VideoWriter('VIDEOS/result-traffic-cars.mp4', fourcc, 10.0,
                                  (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT))), 
                                  True)
@@ -357,7 +297,7 @@ Reading frames in the loop
 print()
 print('Total number of frames', f)
 print('Total amount of time {:.5f} seconds'.format(t))
-print('FPS:', round((f / t), 1))
+print('Frames Per Second:', round((f / t), 1))
 
 
 # Releasing video reader and writer
@@ -365,19 +305,4 @@ video.release()
 writer.release()
 
 
-"""
-Some comments
-
-What is a FOURCC?
-    FOURCC is short for "four character code" - an identifier for a video codec,
-    compression format, colour or pixel format used in media files.
-    http://www.fourcc.org
-
-
-Parameters for cv2.VideoWriter():
-    filename - Name of the output video file.
-    fourcc - 4-character code of codec used to compress the frames.
-    fps	- Frame rate of the created video.
-    frameSize - Size of the video frames.
-    isColor	- If it True, the encoder will expect and encode colour frames.
 """
